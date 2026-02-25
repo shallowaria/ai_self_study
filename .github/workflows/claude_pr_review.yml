@@ -1,0 +1,50 @@
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  ai-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write # 允许 AI 发表评论
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run Claude Review
+        env:
+          # 使用你习惯的变量名注入
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+        run: |
+          # 1. 跳过交互式引导
+          # 2. 执行 /code-review 指令
+          # 3. 如果你的 BASE_URL 是中转 API，Claude Code 会自动通过这些变量访问
+          claude --onboarding-finished -p "根据项目 constitution.md 和 CLAUDE.md 中的 /code-review 指令，对当前 PR 的变更进行代码审查，并输出 Markdown 报告。" > review_report.md
+
+      - name: Post PR Comment
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: review_report.md
