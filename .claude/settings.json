@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": ["Bash(git add .)", "Bash(git commit -m *)", "Bash(git push)"],
+    "deny": [
+      "Read(.env*)",
+      "Read(*.pem)",
+      "Read(*.key)",
+      "Read(config/secrets.*)",
+      "Bash(grep -r \"password\" .)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/format-ts.js"
+          }
+        ]
+      }
+    ]
+  }
+}
