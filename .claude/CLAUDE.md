@@ -32,3 +32,28 @@ These rules have the highest priority and override any other suggestions:
 6. **No global Context unless necessary** — Prefer URL params (`searchParams`) or server-side data passing for state.
 7. **Decouple logic** — Extract complex business logic from UI components into `utils/` functions or custom Hooks with accompanying type definitions.
 8. **Tests required** — Vitest for unit tests (utils/hooks), Playwright for E2E (core user paths). No refactoring without a passing test suite.
+
+## Claude Code Tooling
+
+### Custom Agent
+
+- **`code-reviewer`** (`.claude/agents/code-reviewer.md`) — Automatically invoked after writing meaningful code. Reviews RSC compliance, TypeScript type safety, YAGNI violations, error handling, Tailwind usage, logic decoupling, and test coverage. Output format: Approved / Approved with Minor Changes / Requires Changes.
+
+### Custom Commands
+
+- **`/commit-push-pr`** (`.claude/commands/commit-push-pr.md`) — Runs `git status`, generates a Conventional Commits message, pushes the branch, and opens a PR via GitHub API.
+- **`/code-review`** (`.claude/commands/code-review.md`) — Reviews specified files/directories against the project constitution. Restricted from accessing `.env*`, `*.pem`, `*.key`, and secrets files.
+
+### Hooks
+
+- **`PostToolUse` hook** (`.claude/hooks/format-ts.js`) — Runs Prettier on any `.ts`/`.tsx` file after every `Edit`, `Write`, or `Read` tool call.
+
+### GitHub Actions
+
+- **`claude_pr_review.yml`** — On every PR open/sync, installs Claude Code and runs `/code-review` against the diff, then posts the Markdown report as a PR comment. Requires `ANTHROPIC_AUTH_TOKEN` and optionally `ANTHROPIC_BASE_URL` in repository secrets.
+
+### Security Permissions
+
+The following reads are permanently denied (configured in `.claude/settings.json`):
+- `.env*`, `*.pem`, `*.key`, `config/secrets.*`
+- Bash commands searching for passwords
